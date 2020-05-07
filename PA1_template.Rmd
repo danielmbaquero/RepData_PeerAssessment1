@@ -1,25 +1,161 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: 'Reproducible Research: Peer Assessment 1'
+author: "Daniel Baquero"
+date: "5/7/2020"
+output: html_document
+keep_md: true
 ---
 
+## Loading libraries
 
-## Loading and preprocessing the data
-
-
-
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
+```{r library, echo=TRUE, results='hide'}
+library(dplyr)
+library(ggplot2)
+```
 
 
+## Loading and preprocessing the data  
 
-## Imputing missing values
+First we must load the data and process it for future work.  
 
+```{r lodingdata, echo=TRUE}
+dat <- read.csv("./activity.csv")
+dat <- mutate(dat, date = as.Date(date))
+str(dat)
+summary(dat)
+```
 
+As we can see, now, we have a data frame with the number of steps, the date, and the interval.  
+It looks like there are a bunch (2304) of NA's in the steps variable.  
+  
 
-## Are there differences in activity patterns between weekdays and weekends?
+## What is mean total number of steps taken per day?  
+  
+To do this we first group the data by the date varibale. Then we summarize it by adding the total steps per day and asign the result to a new data frame called total_day.  
+
+```{r stepsperday, echo=TRUE}
+total_day <- group_by(dat, date) %>% summarize(total_steps = sum(steps))
+```
+  
+Lets plot the histogram for the total number of steps per day.  
+
+```{r stepshistogram, echo=TRUE}
+{ggplot(total_day, aes(total_steps)) +
+        geom_histogram(bins = 25, alpha = 0.75, color = "black") +
+        labs(title = "Total Number of Steps Per Day",
+             x = "Steps per day",
+             y = "Frequency") +
+        theme_bw()}
+```
+  
+We can calculate the mean and median of the total number of steps per day.  
+
+```{r summarysteps, echo=TRUE}
+summary(total_day$total_steps)
+```
+  
+As shown above, the mean number of total steps per day is 10766 and the median are 10765. Those numbers are pretty close.  
+  
+## What is the average daily activity pattern?  
+  
+To do this, we first need to group the data by the interval. Then, summarize it by avarageing the number of stpes across all days. Finally, we can plot a time series of the daily activity pattern.  
+
+```{r activitypattern, echo=TRUE}
+average_int <- group_by(dat, interval) %>% summarize(avg_int = mean(steps, na.rm = T))
+{ggplot(average_int, aes(x = interval, y = avg_int)) +
+        geom_line() + 
+        labs(title = "Average Daily Activity Pattern",
+             x = "Interval",
+             y = "Average Steps") +
+        theme_bw()}
+```
+  
+  
+## Imputing missing values  
+  
+As shown above, the total number of missing values is 2304. We can double check it by calculating the summary of the steps.  
+
+```{r missingval, echo=TRUE}
+summary(dat$steps)
+```
+  
+Our strategy to impute the missing values is to use the median value for each interval. To do this, it is requiered to calculate the median steps for each interval.  
+
+```{r mediansteps, echo=TRUE}
+med_int <- group_by(dat, interval) %>% summarize(median_int = median(steps, na.rm = T))
+head(med_int)
+```
+  
+Now, it is time to impute the missing values and create a new data frame.  
+  
+```{r imput, echo=TRUE, cache=TRUE}
+new_dat <- data.frame()
+for(i in 1:length(dat$interval)){
+    if (is.na(dat[i,1])){
+        new_dat[i,1] = med_int[match(dat[i,3], med_int$interval),2]
+        new_dat[i,2] = dat[i,3]
+        new_dat[i,3] = dat[i,2]
+    } else {
+        new_dat[i,1] = dat[i,1]
+        new_dat[i,2] = dat[i,3]
+        new_dat[i,3] = dat[i,2]
+    }
+}
+names(new_dat) <- c("steps", "interval", "date")
+summary(new_dat$steps)
+```
+  
+To show the impact of imputing data, we can show the same histogram as the one in the begining, but with our new data set.  
+  
+```{r stepsperdaynew, echo=TRUE}
+total_day_new <- group_by(new_dat, date) %>% summarize(total_steps = sum(steps))
+{ggplot(total_day_new, aes(total_steps)) +
+        geom_histogram(bins = 25, alpha = 0.75, color = "black") +
+        labs(title = "Total Number of Steps Per Day",
+             subtitle = "Data imputed using median of the interval",
+             x = "Steps per day",
+             y = "Frequency") +
+        theme_bw()}
+```
+  
+Also, we can compare the mean and median values of each data set. 
+
+```{r comparisson, echo=TRUE}
+summary(dat$steps)
+summary(new_dat$steps)
+```
+  
+As show in the above comparisson, after imputing the data, the upper side of the distribution decreasead.  
+  
+## Are there differences in activity patterns between weekdays and weekends?  
+  
+To compare this, first, we need a new factor variable indicating if is weekday or not.  
+  
+```{r newfactor, echo=TRUE, cache=TRUE}
+new_dat <- mutate(new_dat,
+                  Day = weekdays(date, abbreviate = T))
+weekends <- c("Sat", "Sun")
+for(i in 1:length(new_dat$steps)){
+    if (new_dat[i,4] %in% weekends){
+        new_dat[i,4] = "weekend"
+    } else {
+        new_dat[i,4] = "weekday"
+    }
+}
+new_dat <- mutate(new_dat, Day = as.factor(Day))
+summary(new_dat$Day)
+```  
+  
+Now me can compare the pattern for weekdays and weekends using the average number of steps per interval across all days.  
+  
+```{r compplot, echo=TRUE}
+average_comp <- group_by(new_dat, interval, Day) %>% summarize(avg_int = mean(steps))
+{ggplot(average_comp, aes(x = interval, y = avg_int)) +
+        geom_line() + 
+        facet_grid(Day~.) +
+        labs(title = "Average Daily Activity Pattern",
+             subtitle = "Weekdays and weekends comparisson",
+             x = "Interval",
+             y = "Average Steps") +
+        theme_bw()}
+```
