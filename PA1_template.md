@@ -206,8 +206,8 @@ weekday or not.
     new_dat <- mutate(new_dat, Day = as.factor(Day))
     summary(new_dat$Day)
 
-    ## weekday 
-    ##   17568
+    ## weekday weekend 
+    ##   12960    4608
 
 Now me can compare the pattern for weekdays and weekends using the
 average number of steps per interval across all days.
