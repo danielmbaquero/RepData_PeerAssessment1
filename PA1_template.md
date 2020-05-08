@@ -2,6 +2,18 @@ Loading libraries
 -----------------
 
     library(dplyr)
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
     library(ggplot2)
 
 Loading and preprocessing the data
@@ -194,8 +206,8 @@ weekday or not.
     new_dat <- mutate(new_dat, Day = as.factor(Day))
     summary(new_dat$Day)
 
-    ## weekday weekend 
-    ##   12960    4608
+    ## weekday 
+    ##   17568
 
 Now me can compare the pattern for weekdays and weekends using the
 average number of steps per interval across all days.
