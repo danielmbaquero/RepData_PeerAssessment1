@@ -83,6 +83,20 @@ we can plot a time series of the daily activity pattern.
 
 ![](PA1_template_files/figure-markdown_strict/activitypattern-1.png)
 
+The 5-min interval with the maximun average is interval 835!
+
+    head(arrange(average_int, desc(avg_int)))
+
+    ## # A tibble: 6 x 2
+    ##   interval avg_int
+    ##      <int>   <dbl>
+    ## 1      835    206.
+    ## 2      840    196.
+    ## 3      850    183.
+    ## 4      845    180.
+    ## 5      830    177.
+    ## 6      820    171.
+
 Imputing missing values
 -----------------------
 

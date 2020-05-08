@@ -2,7 +2,9 @@
 title: 'Reproducible Research: Peer Assessment 1'
 author: "Daniel Baquero"
 date: "5/7/2020"
-output: html_document
+output: 
+    html_document: default
+    md_document: default
 keep_md: true
 ---
 
@@ -70,7 +72,10 @@ average_int <- group_by(dat, interval) %>% summarize(avg_int = mean(steps, na.rm
         theme_bw()}
 ```
   
-  
+The 5-min interval with the maximun average is interval 835!  
+```{r max, echo=TRUE}
+head(arrange(average_int, desc(avg_int)))
+```
 ## Imputing missing values  
   
 As shown above, the total number of missing values is 2304. We can double check it by calculating the summary of the steps.  
